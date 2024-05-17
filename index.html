@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaire d'Inscription</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #fff
+        }
+        header {
+            width: 100%;
+            background-color: #2545d2;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+        }
+        header img {
+            height: 45px;
+        }
+        label{
+            font-size: 12px;
+            margin-left: 1px;
+            font-weight: bold;
+        }
+        header button {
+            background-color: #fff;
+            color: #2545d2;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            width: 300px;
+            margin: 20px 0;
+        }
+        form input, form select, form button {
+            margin: 10px 0;
+            padding: 10px;
+        }
+        #students-list{
+            background-color: #fff;
+        }
+        .envoie{
+            font-weight: bold;
+            color: #ddd;
+            cursor: pointer;
+            background-color: #2545d2;
+            font-size: 15px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        .student-img {
+            height: 50px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .inscrit{
+            text-align: center;
+        }
+        .supri{
+            background-color: red;
+            color: #fff;
+            cursor: pointer;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #2545d2;
+            color: white;
+        }
+        @media only screen and (max-width: 600px) {
+            form {
+                width: 100%;
+                padding: 0 15px;
+            }
+            table {
+            width: 100%;
+            border-collapse: collapse;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="photo.jpg" alt="Logo">
+        <button id="view-registered">Inscrits</button>
+        <button id="edit-button">Modifier</button>
+    </header>
+    <main>
+        <form id="registration-form">
+            <h2>Formulaire d'Inscription</h2>
+            <input type="text" id="matricule" placeholder="Matricule" required>
+            <input type="text" id="first-name" placeholder="Prénom" required>
+            <input type="text" id="last-name" placeholder="Nom" required>
+            <input type="tel" id="whatsapp" placeholder="Numéro WhatsApp" required>
+            <label for="">Voulez-vous jouer?</label>
+            <select id="response">
+                <option value=""></option>
+                <option value="OUI">OUI</option>
+                <option value="NON">NON</option>
+            </select>
+            <label for="image">Votre image:</label>
+            <input type="file" id="image" accept="image/*" required>
+            <button class="envoie" type="submit">Submit</button>
+        </form>
+        <div id="registered-students" class="hidden">
+            <h2 class="inscrit">Ceux qui sont inscrits</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Matricule</th>
+                        <th>Prénom</th>
+                        <th>Nom</th>
+                        <th>Numéro WhatsApp</th>
+                        <th>Photo</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="students-list">
+                </tbody>
+            </table>
+        </div>
+    </main>
+    <script src="https://unpkg.com/scrollreveal"></script>
+    <script>
+        const form = document.getElementById('registration-form');
+        const viewRegisteredButton = document.getElementById('view-registered');
+        const editButton = document.getElementById('edit-button');
+        const registeredStudentsDiv = document.getElementById('registered-students');
+        const studentsList = document.getElementById('students-list');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const student = {
+                matricule: document.getElementById('matricule').value,
+                firstName: document.getElementById('first-name').value,
+                lastName: document.getElementById('last-name').value,
+                whatsapp: document.getElementById('whatsapp').value,
+                response: document.getElementById('response').value,
+                image: URL.createObjectURL(document.getElementById('image').files[0])
+            };
+            
+            let students = JSON.parse(localStorage.getItem('students')) || [];
+            students.push(student);
+            localStorage.setItem('students', JSON.stringify(students));
+            
+            alert('Étudiant inscrit avec succès!');
+            form.reset();
+        });
+
+        viewRegisteredButton.addEventListener('click', function() {
+            registeredStudentsDiv.classList.toggle('hidden');
+            form.classList.toggle('hidden');
+            editButton.classList.toggle('hidden');
+
+            if (!registeredStudentsDiv.classList.contains('hidden')) {
+                let students = JSON.parse(localStorage.getItem('students')) || [];
+                studentsList.innerHTML = '';
+                students.forEach((student, index) => {
+                    let row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${student.matricule}</td>
+                        <td>${student.firstName}</td>
+                        <td>${student.lastName}</td>
+                        <td>${student.whatsapp}</td>
+                        <td><img src="${student.image}" alt="Photo" class="student-img"></td>
+                        <td><button class="supri" onclick="deleteStudent(${index})">Supprimer</button></td>
+                    `;
+                    studentsList.appendChild(row);
+                });
+            }
+        });
+
+        function deleteStudent(index) {
+            let students = JSON.parse(localStorage.getItem('students')) || [];
+            students.splice(index, 1);
+            localStorage.setItem('students', JSON.stringify(students));
+            viewRegisteredButton.click();
+        }
+
+        editButton.addEventListener('click', function() {
+            const matricule = prompt('Entrer le matricule de l\'étudiant à modifier:');
+            let students = JSON.parse(localStorage.getItem('students')) || [];
+            const studentIndex = students.findIndex(student => student.matricule === matricule);
+
+            if (studentIndex !== -1) {
+                const student = students[studentIndex];
+                document.getElementById('matricule').value = student.matricule;
+                document.getElementById('first-name').value = student.firstName;
+                document.getElementById('last-name').value = student.lastName;
+                document.getElementById('whatsapp').value = student.whatsapp;
+                document.getElementById('response').value = student.response;
+
+                students.splice(studentIndex, 1);
+                localStorage.setItem('students', JSON.stringify(students));
+                registeredStudentsDiv.classList.add('hidden');
+                form.classList.remove('hidden');
+                editButton.classList.add('hidden');
+            } else {
+                alert('Matricule non trouvé.');
+            }
+        });
+
+        ScrollReveal().reveal('form', { delay: 500 });
+        ScrollReveal().reveal('#registered-students', { delay: 500 });
+    </script>
+</body>
+</html>
